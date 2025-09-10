@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button id="btn">
+        Open tabs
+    </button>
+
+    <script>
+        const btn = document.getElementById('btn');
+
+        btn.addEventListener('click', openTabs);
+
+        function openTabs() {
+            window.open('https://www.google.com', '_blank');
+            window.open('https://www.bing.com', '_blank');
+            window.open('https://www.duckduckgo.com', '_blank');
+            window.open('https://www.yahoo.com', '_blank');
+        }
+    </script>
+</body>
+</html>
