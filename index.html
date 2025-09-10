@@ -3,24 +3,240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>URL Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .container {
+            padding: 10px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .key-info {
+            background: #e3f2fd;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #1565c0;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-family: monospace;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            border-color: #007bff;
+        }
+
+        textarea::placeholder {
+            color: #6c757d;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
 </head>
 <body>
-    <button id="btn">
-        Open tabs
-    </button>
+    <div class="container">
+        <div class="key-info" id="keyInfo">
+            Current key: <span id="currentKey">default</span>
+        </div>
+
+        <textarea
+            id="urlTextarea"
+            placeholder="Paste your URLs here, one per line or separated by spaces...&#10;&#10;Example:&#10;https://www.google.com&#10;https://www.github.com&#10;https://www.stackoverflow.com"
+        ></textarea>
+
+        <button id="openBtn" class="btn-primary">Open URLs</button>
+
+        <div id="status" class="status"></div>
+    </div>
 
     <script>
-        const btn = document.getElementById('btn');
-
-        btn.addEventListener('click', openTabs);
-
-        function openTabs() {
-            window.open('https://www.google.com', '_blank');
-            window.open('https://www.bing.com', '_blank');
-            window.open('https://www.duckduckgo.com', '_blank');
-            window.open('https://www.yahoo.com', '_blank');
+        // Get key from URL query parameter
+        function getKeyFromQuery() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('key') || 'default';
         }
+
+        // Get localStorage key
+        function getStorageKey(key) {
+            return `page_${key}`;
+        }
+
+        // Load URLs from localStorage
+        function loadUrls(key) {
+            const storageKey = getStorageKey(key);
+            const savedUrls = localStorage.getItem(storageKey);
+            return savedUrls || '';
+        }
+
+        // Save URLs to localStorage
+        function saveUrls(key, urls) {
+            const storageKey = getStorageKey(key);
+            localStorage.setItem(storageKey, urls);
+        }
+
+        // Parse URLs from text
+        function parseUrls(text) {
+            if (!text.trim()) return [];
+
+            // Split by newlines and spaces, filter out empty strings
+            const urls = text.split(/[\n\s]+/)
+                .map(url => url.trim())
+                .filter(url => url.length > 0);
+
+            // Basic URL validation
+            const validUrls = urls.filter(url => {
+                try {
+                    // Add protocol if missing
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                        url = 'https://' + url;
+                    }
+                    new URL(url);
+                    return true;
+                } catch {
+                    return false;
+                }
+            });
+
+            return validUrls.map(url => {
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    return 'https://' + url;
+                }
+                return url;
+            });
+        }
+
+        // Show status message
+        function showStatus(message, type = 'success') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
+
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 3000);
+        }
+
+        // Initialize page
+        function init() {
+            const key = getKeyFromQuery();
+            const textarea = document.getElementById('urlTextarea');
+            const currentKeyEl = document.getElementById('currentKey');
+            const openBtn = document.getElementById('openBtn');
+
+            // Display current key
+            currentKeyEl.textContent = key;
+
+            // Load saved URLs
+            const savedUrls = loadUrls(key);
+            textarea.value = savedUrls;
+
+            // Auto-save on input (saves automatically on any change)
+            textarea.addEventListener('input', () => {
+                saveUrls(key, textarea.value);
+            });
+
+            // Open button click
+            openBtn.addEventListener('click', () => {
+                const urls = parseUrls(textarea.value);
+
+                if (urls.length === 0) {
+                    showStatus('No valid URLs found!', 'error');
+                    return;
+                }
+
+                // Open each URL in a new tab
+                urls.forEach(url => {
+                    window.open(url, '_blank');
+                });
+
+                showStatus(`Opened ${urls.length} URL${urls.length > 1 ? 's' : ''}!`);
+            });
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
