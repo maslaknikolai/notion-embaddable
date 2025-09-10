@@ -101,26 +101,6 @@
             background-color: #545b62;
         }
 
-        .status {
-            margin-top: 15px;
-            padding: 12px 15px;
-            border-radius: 8px;
-            font-size: 14px;
-            display: none;
-            font-weight: 500;
-        }
-
-        .status.success {
-            background-color: #1a4d3a;
-            color: #4ade80;
-            border: 1px solid #22c55e;
-        }
-
-        .status.error {
-            background-color: #4d1a1a;
-            color: #f87171;
-            border: 1px solid #ef4444;
-        }
     </style>
 </head>
 <body>
@@ -138,7 +118,6 @@
             </div>
         </div>
 
-        <div id="status" class="status"></div>
     </div>
 
     <script>
@@ -197,17 +176,6 @@
             });
         }
 
-        // Show status message
-        function showStatus(message, type = 'success') {
-            const statusEl = document.getElementById('status');
-            statusEl.textContent = message;
-            statusEl.className = `status ${type}`;
-            statusEl.style.display = 'block';
-
-            setTimeout(() => {
-                statusEl.style.display = 'none';
-            }, 3000);
-        }
 
         // Initialize page
         function init() {
@@ -233,7 +201,6 @@
                 const urls = parseUrls(textarea.value);
 
                 if (urls.length === 0) {
-                    showStatus('No valid URLs found!', 'error');
                     return;
                 }
 
@@ -241,8 +208,6 @@
                 urls.forEach(url => {
                     window.open(url, '_blank');
                 });
-
-                showStatus(`Opened ${urls.length} URL${urls.length > 1 ? 's' : ''}!`);
             });
         }
 
